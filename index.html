@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Octavos Oracle · Mundial 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0E11; --panel:#14181D; --panel2:#181D23; --line:#252D35;
+    --text:#E8ECEF; --muted:#8A96A0; --dim:#5E6A73;
+    --volt:#C6F135; --volt-dim:#9bbf22;
+    --A:#4DA3FF; --B:#FF7A45; --draw:#6B7681;
+    --good:#57d977; --warn:#f0c445;
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    background:
+      radial-gradient(1200px 600px at 80% -10%, rgba(198,241,53,.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:"Inter",system-ui,sans-serif;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:22px 16px 60px;
+  }
+  .wrap{max-width:760px;margin:0 auto}
+  .mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+
+  header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .kicker{font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.28em;color:var(--volt);text-transform:uppercase}
+  h1{font-family:"Anton",sans-serif;font-weight:400;font-size:clamp(30px,7vw,52px);line-height:.92;letter-spacing:.01em;margin:2px 0 0;text-transform:uppercase}
+  h1 span{color:var(--volt)}
+  .sub{color:var(--muted);font-size:13px;max-width:46ch}
+  .stamp{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--dim);text-align:right;line-height:1.7;white-space:nowrap}
+  .stamp b{color:var(--muted);font-weight:500}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .panel + .panel{margin-top:14px}
+  .label{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:0 0 8px}
+
+  /* live status bar */
+  .livebar{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px;flex-wrap:wrap}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--dim);flex-shrink:0}
+  .dot.live{background:var(--good);box-shadow:0 0 0 3px rgba(87,217,119,.15)}
+  .dot.stale{background:var(--warn)}
+  .livetext{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);flex:1;min-width:180px}
+  .livetext b{color:var(--text)}
+  .refreshbtn{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:8px;padding:7px 12px;font-size:11.5px;cursor:pointer;font-family:"Inter",sans-serif;font-weight:600;display:flex;align-items:center;gap:6px}
+  .refreshbtn:hover{border-color:var(--volt);color:var(--volt)}
+  .refreshbtn:disabled{opacity:.5;cursor:default}
+  .refreshbtn svg{width:12px;height:12px}
+  .spin{animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .setup{display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center}
+  .selwrap{display:flex;flex-direction:column;gap:6px}
+  .selwrap .cap{font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase}
+  .capA{color:var(--A)} .capB{color:var(--B)}
+  select{
+    width:100%;appearance:none;background:var(--panel2);color:var(--text);
+    border:1px solid var(--line);border-radius:10px;padding:12px 12px;font-size:15px;font-weight:600;
+    font-family:"Inter",sans-serif;cursor:pointer;
+    background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+    background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;
+  }
+  select:focus-visible{outline:2px solid var(--volt);outline-offset:1px}
+  .vs{font-family:"Anton",sans-serif;font-size:22px;color:var(--dim);padding:0 2px}
+  .venue{display:flex;gap:6px;margin-top:12px;flex-wrap:wrap}
+  .venue button{
+    flex:1;min-width:90px;background:var(--panel2);border:1px solid var(--line);color:var(--muted);
+    border-radius:9px;padding:8px 6px;font-size:11.5px;font-weight:600;cursor:pointer;font-family:"Inter",sans-serif;
+    display:flex;flex-direction:column;gap:1px;align-items:center;transition:.15s;
+  }
+  .venue button .h{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.12em;color:var(--dim)}
+  .venue button[aria-pressed="true"]{border-color:var(--volt);color:var(--text);background:rgba(198,241,53,.07)}
+  .venue button:focus-visible{outline:2px solid var(--volt);outline-offset:1px}
+  .altnote{margin-top:8px;font-size:11.5px;color:var(--muted);display:none}
+  .altnote.show{display:block}
+  .altnote b{color:var(--volt)}
+
+  .board{background:linear-gradient(180deg,#10151a,#0d1116);border:1px solid var(--line);border-radius:var(--radius);padding:20px 18px 26px;position:relative;overflow:hidden}
+  .board::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.015) 0 1px,transparent 1px 3px);pointer-events:none}
+  .score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;position:relative}
+  .tm{display:flex;flex-direction:column;gap:4px;min-width:0}
+  .tm.right{align-items:flex-end;text-align:right}
+  .tm .flag{font-size:26px;line-height:1}
+  .tm .nm{font-family:"Anton",sans-serif;font-size:clamp(18px,4.6vw,30px);text-transform:uppercase;letter-spacing:.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .tm .elo{font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--dim)}
+  .nums{display:flex;align-items:center;gap:10px;font-family:"Anton",sans-serif;font-size:clamp(34px,10vw,60px);line-height:1}
+  .nums .dash{color:var(--dim);font-size:.6em}
+  #sA{color:var(--A)} #sB{color:var(--B)}
+  .adv{margin-top:16px;text-align:center;font-family:"JetBrains Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--muted)}
+  .adv b{color:var(--volt);font-size:12px}
+
+  .tri{display:flex;height:34px;border-radius:8px;overflow:hidden;margin-top:22px;border:1px solid var(--line)}
+  .tri span{display:flex;align-items:center;justify-content:center;font-family:"JetBrains Mono",monospace;font-size:12px;font-weight:700;color:#0B0E11;min-width:0;transition:flex-basis .35s ease}
+  .tri .segA{background:var(--A)}
+  .tri .segD{background:var(--draw);color:#E8ECEF}
+  .tri .segB{background:var(--B)}
+  .trilabels{display:flex;justify-content:space-between;margin-top:6px;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:.06em;color:var(--dim)}
+  .xg{display:flex;justify-content:center;gap:18px;margin-top:14px;font-family:"JetBrains Mono",monospace;font-size:12px;color:var(--muted)}
+  .xg b{color:var(--text)}
+
+  .scores{display:flex;gap:8px;flex-wrap:wrap}
+  .sl{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:8px 12px;text-align:center;flex:1;min-width:70px}
+  .sl .r{font-family:"Anton",sans-serif;font-size:20px}
+  .sl .p{font-family:"JetBrains Mono",monospace;font-size:10.5px;color:var(--muted);margin-top:2px}
+  .sl:first-child{border-color:var(--volt-dim)}
+
+  .sig{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .sigcard{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px}
+  .sigcard .who{display:flex;align-items:center;gap:6px;font-weight:700;font-size:13px;margin-bottom:8px}
+  .sigrow{display:flex;justify-content:space-between;font-family:"JetBrains Mono",monospace;font-size:11px;color:var(--muted);padding:3px 0}
+  .sigrow b{color:var(--text);font-weight:600}
+  .sigrow .src{color:var(--dim);display:flex;align-items:center;gap:5px}
+  .livechip{width:5px;height:5px;border-radius:50%;background:var(--good);flex-shrink:0}
+  .compbar{height:6px;border-radius:4px;background:var(--line);margin-top:8px;overflow:hidden}
+  .compbar i{display:block;height:100%;background:var(--volt)}
+
+  .presets{display:flex;gap:8px;flex-wrap:wrap}
+  .presets button{background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:999px;padding:8px 13px;font-size:12px;cursor:pointer;font-family:"Inter",sans-serif;font-weight:500;transition:.15s}
+  .presets button:hover{border-color:var(--volt);color:var(--volt)}
+  .presets button:focus-visible{outline:2px solid var(--volt);outline-offset:1px}
+  .phead{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+  .pchip{font-family:"JetBrains Mono",monospace;font-size:9px;letter-spacing:.14em;color:var(--dim);border:1px solid var(--line);border-radius:6px;padding:3px 7px}
+
+  footer{margin-top:24px;color:var(--dim);font-size:11px;line-height:1.7}
+  footer b{color:var(--muted)}
+
+  @media (max-width:560px){
+    .setup{grid-template-columns:1fr;gap:8px}
+    .vs{display:none}
+    .sig{grid-template-columns:1fr}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}.spin{animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <div class="kicker">Mundial 2026 · Fase eliminatoria</div>
+      <h1>Octavos<span>·</span>Oracle</h1>
+      <div class="sub">Elegí los dos países. El rating combina Elo, el modelo de Goldman Sachs y Polymarket <b style="color:var(--text)">en vivo</b> — no hace falta cargar nada más.</div>
+    </div>
+    <div class="stamp">
+      <div><b>Elo</b> eloratings.net</div>
+      <div><b>Modelo</b> Goldman Sachs</div>
+      <div><b>Mercado</b> Polymarket API</div>
+    </div>
+  </header>
+
+  <div class="livebar">
+    <span class="dot" id="liveDot"></span>
+    <span class="livetext" id="liveText">Conectando con Polymarket…</span>
+    <button class="refreshbtn" id="refreshBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 4v6h-6"/></svg>
+      Actualizar
+    </button>
+  </div>
+
+  <div class="panel">
+    <div class="setup">
+      <div class="selwrap">
+        <div class="cap capA">Local / Equipo A</div>
+        <select id="teamA" aria-label="Equipo A"></select>
+      </div>
+      <div class="vs">VS</div>
+      <div class="selwrap">
+        <div class="cap capB">Visita / Equipo B</div>
+        <select id="teamB" aria-label="Equipo B"></select>
+      </div>
+    </div>
+    <div class="venue" role="group" aria-label="Sede">
+      <button data-venue="neutral" aria-pressed="true"><span class="h">SEDE</span>Neutral</button>
+      <button data-venue="A" aria-pressed="false"><span class="h">DE LOCAL</span><span id="vAname">Equipo A</span></button>
+      <button data-venue="B" aria-pressed="false"><span class="h">DE LOCAL</span><span id="vBname">Equipo B</span></button>
+    </div>
+    <div class="altnote" id="altnote"><b>Nota altitud:</b> jugar en Ciudad de México (2.240 m) penaliza a rivales de baja altura — factor que el propio modelo de Goldman incluye.</div>
+  </div>
+
+  <div class="board">
+    <div class="score">
+      <div class="tm">
+        <div class="flag" id="fA">🏴</div>
+        <div class="nm" id="nA">—</div>
+        <div class="elo mono" id="eA">Rating —</div>
+      </div>
+      <div class="nums">
+        <span id="sA">0</span><span class="dash">–</span><span id="sB">0</span>
+      </div>
+      <div class="tm right">
+        <div class="flag" id="fB">🏴</div>
+        <div class="nm" id="nB">—</div>
+        <div class="elo mono" id="eB">Rating —</div>
+      </div>
+    </div>
+
+    <div class="tri" id="tri">
+      <span class="segA" id="segA" style="flex-basis:40%">40%</span>
+      <span class="segD" id="segD" style="flex-basis:25%">25%</span>
+      <span class="segB" id="segB" style="flex-basis:35%">35%</span>
+    </div>
+    <div class="trilabels"><span id="lA">Gana A</span><span>Empate</span><span id="lB">Gana B</span></div>
+    <div class="xg"><span>xG <b id="xgA">0.0</b></span><span class="mono" style="color:var(--dim)">MARCADOR MÁS PROBABLE</span><span>xG <b id="xgB">0.0</b></span></div>
+
+    <div class="adv" id="adv">AVANZA → <b>—</b></div>
+  </div>
+
+  <div class="panel">
+    <p class="label">Marcadores más probables</p>
+    <div class="scores" id="scores"></div>
+  </div>
+
+  <div class="panel">
+    <p class="label">De dónde sale el rating combinado</p>
+    <div class="sig" id="sig"></div>
+  </div>
+
+  <div class="panel">
+    <div class="phead"><p class="label" style="margin:0">Cruces en juego</p><span class="pchip">TAP PARA CARGAR</span></div>
+    <div class="presets" id="presets"></div>
+  </div>
+
+  <footer>
+    <b>Cómo se arma el rating.</b> Cada país tiene un rating combinado = 82% Elo (eloratings.net) + 18% señal de mercado. La señal de mercado mezcla el % de campeón del modelo de Goldman Sachs (research del 29-may-2026, fijo) con el % de campeón de <b>Polymarket</b>, que se trae en vivo desde su API pública cada vez que abrís la página o tocás "Actualizar". Ese rating alimenta un motor Elo-Poisson que calcula goles esperados, marcador más probable, 1·X·2 y quién avanza.<br>
+    <b>Sobre Betano.</b> Las casas de apuestas tradicionales no tienen API pública, así que no se puede conectar en vivo — por eso no aparece como fuente separada acá; el consenso de mercado se apoya en Polymarket, que sí es público.<br>
+    <b>Ojo.</b> Es una herramienta de estimación, no consejo de apuestas. El fútbol es ruido.
+  </footer>
+</div>
+
+<script>
+/* ---------- TEAM DATA (fallback si Polymarket no responde) ---------- */
+const TEAMS = [
+  {id:"ARG",es:"Argentina",f:"🇦🇷",elo:2148,gs:14.3,pm:21,   pmName:"Argentina"},
+  {id:"ESP",es:"España",f:"🇪🇸",elo:2144,gs:25.7,pm:11,      pmName:"Spain"},
+  {id:"FRA",es:"Francia",f:"🇫🇷",elo:2134,gs:18.9,pm:33,     pmName:"France"},
+  {id:"ENG",es:"Inglaterra",f:"🏴",elo:2038,gs:5.0,pm:9,     pmName:"England"},
+  {id:"BRA",es:"Brasil",f:"🇧🇷",elo:2031,gs:7.6,pm:7,        pmName:"Brazil"},
+  {id:"COL",es:"Colombia",f:"🇨🇴",elo:2004,gs:2.2,pm:1.4,    pmName:"Colombia"},
+  {id:"POR",es:"Portugal",f:"🇵🇹",elo:1990,gs:4.8,pm:5,      pmName:"Portugal"},
+  {id:"MEX",es:"México",f:"🇲🇽",elo:1943,gs:0.8,pm:3,alt:true, pmName:"Mexico"},
+  {id:"NOR",es:"Noruega",f:"🇳🇴",elo:1934,gs:1.6,pm:2,       pmName:"Norway"},
+  {id:"CRO",es:"Croacia",f:"🇭🇷",elo:1926,gs:1.7,pm:1,       pmName:"Croatia"},
+  {id:"SUI",es:"Suiza",f:"🇨🇭",elo:1912,gs:0.7,pm:0.7,       pmName:"Switzerland"},
+  {id:"URU",es:"Uruguay",f:"🇺🇾",elo:1892,gs:0.4,pm:0.5,     pmName:"Uruguay"},
+  {id:"MAR",es:"Marruecos",f:"🇲🇦",elo:1878,gs:0.3,pm:2.2,   pmName:"Morocco"},
+  {id:"BEL",es:"Bélgica",f:"🇧🇪",elo:1866,gs:0.7,pm:1,       pmName:"Belgium"},
+  {id:"USA",es:"Estados Unidos",f:"🇺🇸",elo:1852,gs:0.5,pm:1.5, pmName:"USA"},
+  {id:"SEN",es:"Senegal",f:"🇸🇳",elo:1844,gs:0.8,pm:0.6,     pmName:"Senegal"},
+  {id:"AUT",es:"Austria",f:"🇦🇹",elo:1822,gs:0.4,pm:0.4,     pmName:"Austria"},
+  {id:"CAN",es:"Canadá",f:"🇨🇦",elo:1798,gs:0.3,pm:0.5,      pmName:"Canada"},
+  {id:"PAR",es:"Paraguay",f:"🇵🇾",elo:1776,gs:0.3,pm:0.6,    pmName:"Paraguay"},
+  {id:"ALG",es:"Argelia",f:"🇩🇿",elo:1742,gs:0.1,pm:0.2,     pmName:"Algeria"},
+  {id:"BIH",es:"Bosnia y H.",f:"🇧🇦",elo:1720,gs:0.02,pm:0.2, pmName:"Bosnia and Herzegovina"},
+  {id:"AUS",es:"Australia",f:"🇦🇺",elo:1712,gs:0.2,pm:0.2,   pmName:"Australia"},
+  {id:"EGY",es:"Egipto",f:"🇪🇬",elo:1698,gs:0.1,pm:0.2,      pmName:"Egypt"},
+  {id:"GHA",es:"Ghana",f:"🇬🇭",elo:1662,gs:0.02,pm:0.2,      pmName:"Ghana"},
+  {id:"CPV",es:"Cabo Verde",f:"🇨🇻",elo:1618,gs:0.02,pm:0.3, pmName:"Cape Verde"},
+];
+const byId = Object.fromEntries(TEAMS.map(t=>[t.id,t]));
+const byPmName = Object.fromEntries(TEAMS.map(t=>[t.pmName.toLowerCase(),t]));
+
+/* ---------- BLEND: Elo + Goldman + Mercado -> un solo rating por país ---------- */
+const W_ELO=0.82, W_MKT=0.18;
+function marketElo(pct){
+  const g=Math.max(pct,0.03);
+  return Math.max(1450,Math.min(2200, 1912+150*Math.log10(g)));
+}
+function recomputeRatings(){
+  TEAMS.forEach(t=>{
+    const mkt = marketElo((t.gs*0.45)+(t.pm*0.55));
+    t.rating = W_ELO*t.elo + W_MKT*mkt;
+  });
+}
+recomputeRatings();
+
+/* ---------- POLYMARKET LIVE ---------- */
+async function fetchPolymarketLive(){
+  const ctrl = new AbortController();
+  const to = setTimeout(()=>ctrl.abort(), 8000);
+  try{
+    const res = await fetch("https://gamma-api.polymarket.com/events?slug=world-cup-winner", {signal:ctrl.signal});
+    clearTimeout(to);
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    const data = await res.json();
+    const event = Array.isArray(data) ? data.find(e=>e.markets&&e.markets.length) : data;
+    if(!event || !event.markets || !event.markets.length) throw new Error("sin mercados");
+    let matched=0;
+    for(const mkt of event.markets){
+      const label = (mkt.groupItemTitle || mkt.question || "").trim();
+      if(!label) continue;
+      let outcomes,prices;
+      try{ outcomes=JSON.parse(mkt.outcomes); prices=JSON.parse(mkt.outcomePrices); }catch{ continue; }
+      const yi = outcomes.findIndex(o=>/yes/i.test(o));
+      if(yi<0) continue;
+      const yesPrice = parseFloat(prices[yi]);
+      if(!isFinite(yesPrice)) continue;
+      const team = byPmName[label.toLowerCase()];
+      if(team){ team.pm = Math.max(0.02, yesPrice*100); matched++; }
+    }
+    if(matched===0) throw new Error("no matchearon equipos");
+    recomputeRatings();
+    return {ok:true, count:matched};
+  }catch(err){
+    clearTimeout(to);
+    return {ok:false, error: err.message||"error de red"};
+  }
+}
+
+function setLiveStatus(state, detail){
+  const dot=document.getElementById("liveDot"), txt=document.getElementById("liveText");
+  if(state==="loading"){ dot.className="dot"; txt.innerHTML="Conectando con Polymarket…"; }
+  else if(state==="live"){ dot.className="dot live"; txt.innerHTML=`Polymarket en vivo · <b>${detail}</b> equipos actualizados · ${new Date().toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'})}`; }
+  else { dot.className="dot stale"; txt.innerHTML=`Sin conexión a Polymarket · usando datos guardados <span style="color:var(--dim)">(${detail})</span>`; }
+}
+
+async function refreshLive(){
+  const btn=document.getElementById("refreshBtn");
+  btn.disabled=true; btn.querySelector("svg").classList.add("spin");
+  setLiveStatus("loading");
+  const r = await fetchPolymarketLive();
+  if(r.ok) setLiveStatus("live", r.count); else setLiveStatus("stale", r.error);
+  compute();
+  btn.disabled=false; btn.querySelector("svg").classList.remove("spin");
+}
+
+/* ---------- MOTOR ELO-POISSON ---------- */
+const MU = 2.6;
+const RATING_PER_GOAL = 300;
+const HOME_BONUS = 65;
+const MAXG = 8;
+
+function fact(n){let r=1;for(let i=2;i<=n;i++)r*=i;return r;}
+function pois(k,l){return Math.exp(-l)*Math.pow(l,k)/fact(k);}
+
+function goalExpectancy(rA,rB,venue){
+  let a=rA,b=rB;
+  if(venue==="A")a+=HOME_BONUS; if(venue==="B")b+=HOME_BONUS;
+  let s=(a-b)/RATING_PER_GOAL;
+  s=Math.max(-2.7,Math.min(2.7,s));
+  return [Math.max(0.2,(MU+s)/2), Math.max(0.2,(MU-s)/2)];
+}
+
+function outcomeMatrix(gA,gB){
+  const pa=[],pb=[];
+  for(let i=0;i<=MAXG;i++){pa.push(pois(i,gA));pb.push(pois(i,gB));}
+  let W=0,D=0,L=0,best={p:-1,a:0,b:0},list=[];
+  for(let i=0;i<=MAXG;i++)for(let j=0;j<=MAXG;j++){
+    const p=pa[i]*pb[j];
+    if(i>j)W+=p; else if(i===j)D+=p; else L+=p;
+    list.push({a:i,b:j,p});
+    if(p>best.p)best={p,a:i,b:j};
+  }
+  const tot=W+D+L;
+  list.sort((x,y)=>y.p-x.p);
+  return {W:W/tot,D:D/tot,L:L/tot,best,top:list.slice(0,4)};
+}
+
+let venue="neutral";
+
+function fillSelects(){
+  const opts=TEAMS.map(t=>`<option value="${t.id}">${t.f} ${t.es}</option>`).join("");
+  teamA.innerHTML=opts; teamB.innerHTML=opts;
+  teamA.value="FRA"; teamB.value="PAR";
+}
+function pct(x){return Math.round(x*100)+"%";}
+function pct1(x){return (x*100).toFixed(1);}
+
+function compute(){
+  const A=byId[teamA.value], B=byId[teamB.value];
+  document.getElementById("vAname").textContent=A.es;
+  document.getElementById("vBname").textContent=B.es;
+
+  const [gA,gB]=goalExpectancy(A.rating,B.rating,venue);
+  const m=outcomeMatrix(gA,gB);
+
+  document.getElementById("fA").textContent=A.f;
+  document.getElementById("fB").textContent=B.f;
+  document.getElementById("nA").textContent=A.es;
+  document.getElementById("nB").textContent=B.es;
+  document.getElementById("eA").textContent="Rating "+Math.round(A.rating);
+  document.getElementById("eB").textContent="Rating "+Math.round(B.rating);
+
+  document.getElementById("sA").textContent=m.best.a;
+  document.getElementById("sB").textContent=m.best.b;
+  document.getElementById("xgA").textContent=gA.toFixed(2);
+  document.getElementById("xgB").textContent=gB.toFixed(2);
+
+  document.getElementById("segA").style.flexBasis=(m.W*100)+"%";
+  document.getElementById("segD").style.flexBasis=(m.D*100)+"%";
+  document.getElementById("segB").style.flexBasis=(m.L*100)+"%";
+  document.getElementById("segA").textContent = m.W>=.08? pct(m.W):"";
+  document.getElementById("segD").textContent = m.D>=.08? pct(m.D):"";
+  document.getElementById("segB").textContent = m.L>=.08? pct(m.L):"";
+  document.getElementById("lA").textContent="Gana "+A.es;
+  document.getElementById("lB").textContent="Gana "+B.es;
+
+  const skew=(gA-gB);
+  const penEdge=0.5+0.12*Math.tanh(skew);
+  const advA=m.W+m.D*penEdge, advB=m.L+m.D*(1-penEdge);
+  const passer=advA>=advB?A:B, pp=Math.max(advA,advB);
+  document.getElementById("adv").innerHTML=`AVANZA → <b>${passer.f} ${passer.es} · ${pct(pp)}</b>`;
+
+  document.getElementById("scores").innerHTML=m.top.map(t=>
+    `<div class="sl"><div class="r">${t.a}–${t.b}</div><div class="p">${pct1(t.p)}%</div></div>`
+  ).join("");
+
+  const cards=[A,B].map(t=>{
+    const barW=Math.min(100, Math.max(4,(t.rating-1500)/7));
+    return `<div class="sigcard">
+      <div class="who">${t.f} ${t.es}</div>
+      <div class="sigrow"><span class="src">Elo</span><b>${t.elo}</b></div>
+      <div class="sigrow"><span class="src">Goldman · % campeón</span><b>${t.gs}%</b></div>
+      <div class="sigrow"><span class="src"><span class="livechip"></span>Polymarket · % campeón</span><b>${t.pm.toFixed(1)}%</b></div>
+      <div class="sigrow"><span class="src">Rating combinado</span><b style="color:var(--volt)">${Math.round(t.rating)}</b></div>
+      <div class="compbar"><i style="width:${barW}%"></i></div>
+    </div>`;
+  }).join("");
+  document.getElementById("sig").innerHTML=cards;
+
+  document.getElementById("altnote").classList.toggle("show",
+    (venue==="A" && A.alt) || (venue==="B" && B.alt));
+}
+
+function setVenue(v){
+  venue=v;
+  document.querySelectorAll(".venue button").forEach(btn=>btn.setAttribute("aria-pressed", btn.dataset.venue===v));
+  compute();
+}
+document.querySelectorAll(".venue button").forEach(btn=>btn.addEventListener("click",()=>setVenue(btn.dataset.venue)));
+teamA.addEventListener("change",()=>setVenue("neutral"));
+teamB.addEventListener("change",()=>setVenue("neutral"));
+document.getElementById("refreshBtn").addEventListener("click",refreshLive);
+
+const PRESETS=[
+  ["FRA","PAR"],["BRA","NOR"],["ESP","AUT"],["POR","CRO"],
+  ["ARG","CPV"],["USA","BIH"],["BEL","SEN"],["CAN","MAR"],
+  ["SUI","ALG"],["COL","GHA"],["AUS","EGY"],["MEX","ENG"],
+];
+document.getElementById("presets").innerHTML=PRESETS.map(([x,y])=>
+  `<button data-a="${x}" data-b="${y}">${byId[x].f} ${byId[x].es} <span style="color:var(--dim)">vs</span> ${byId[y].es} ${byId[y].f}</button>`
+).join("");
+document.querySelectorAll("#presets button").forEach(btn=>btn.addEventListener("click",()=>{
+  teamA.value=btn.dataset.a; teamB.value=btn.dataset.b; setVenue("neutral");
+  document.querySelector(".board").scrollIntoView({behavior:"smooth",block:"center"});
+}));
+
+fillSelects();
+setVenue("neutral");
+refreshLive();
+</script>
+</body>
+</html>
